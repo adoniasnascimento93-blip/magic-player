@@ -1,3 +1,12 @@
 {
-  "videos": {}
+  "videos": {
+    "LDL8AU": {
+      "id": "mwxvqucw",
+      "code": "LDL8AU",
+      "title": "teste 3",
+      "url": "https://i.imgur.com/Dsx0Uu2.mp4",
+      "poster": "",
+      "magic": true
+    }
+  }
 }
