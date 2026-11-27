@@ -79,6 +79,11 @@ $('start').addEventListener('click',async()=>{
 });
 $('sound').addEventListener('click',()=>{muted=!muted;videos.forEach(v=>{v.muted=muted;if(!muted&&!v.paused)v.play().catch(()=>{})});$('sound').textContent=muted?'ATIVAR SOM':'SOM ATIVADO'});
 $('stop').addEventListener('click',async()=>{await stopCamera();say('Câmera encerrada. Toque em INICIAR EXPERIÊNCIA para começar novamente.')});
-loadCatalog();
+loadCatalog().then(()=>{
+ if(new URLSearchParams(location.search).get('iniciar')==='1' && records.length){
+  say('Preparando sua experiência automaticamente…');
+  $('start').click();
+ }
+});
 </script>
 </body></html>
