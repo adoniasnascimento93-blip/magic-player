@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18">
+<title>Painel · MAGIC PHOTO AR</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#141b2b;--line:#2b3852;--muted:#a8b5cc;--violet:#8b5cf6;--cyan:#22d3ee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20274a 0,#090d18 58%);font:15px system-ui,sans-serif;color:#f7f8ff;min-height:100vh}
+header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:21px;font-weight:900;letter-spacing:1.5px}.brand span{color:var(--cyan)}
+main{max-width:900px;margin:28px auto;padding:0 15px}.panel{background:#141b2bf2;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 18px 60px #0004}
+h1{font-size:clamp(25px,5vw,36px);margin:0 0 8px}h2{font-size:19px;margin:0 0 15px}p,.muted{color:var(--muted);line-height:1.5}.field{margin:13px 0}.field label{display:block;font-weight:700;margin-bottom:7px}.field input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c1322;color:#fff;font:inherit}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.btn,button{border:0;border-radius:11px;padding:12px 17px;background:linear-gradient(110deg,var(--violet),#526df5);color:white;font-weight:800;cursor:pointer;font-size:14px}.secondary{background:#26334c;border:1px solid #40516f}.danger{background:#7f1d1d}.btn:disabled,button:disabled{opacity:.5;cursor:wait}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.status{padding:12px 14px;border:1px dashed #52627f;border-radius:11px;color:#d3def2;margin-top:14px;white-space:pre-wrap}.hidden{display:none!important}.item{display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff18}.item:last-child{border:0}.thumb{width:74px;height:64px;object-fit:cover;border-radius:9px;background:#0b1020}.iteminfo{min-width:0;flex:1}.iteminfo strong{display:block;overflow-wrap:anywhere}.iteminfo small{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:4px}.tag{font-size:11px;border:1px solid #52627f;border-radius:30px;padding:4px 8px;color:#cbd5e1}.hint{font-size:12px;color:#9eacc4}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.panel{padding:17px}.item{align-items:flex-start}.thumb{width:58px;height:58px}}
+</style>
+</head>
+<body>
+<header><div class="brand">MAGIC<span> PHOTO AR</span></div><span class="tag">PAINEL ADMINISTRATIVO</span></header>
+<main>
+<section class="panel" id="access">
+<h1>Gerenciar fotografias</h1>
+<p>Conecte seu repositório GitHub para carregar, cadastrar, editar e excluir os registros do MAGIC PHOTO AR.</p>
+<div class="field"><label for="token">Token de acesso do GitHub</label><input id="token" type="password" autocomplete="off" placeholder="Cole aqui seu token fine-grained"></div>
+<p class="hint">O token fica somente na memória desta página: não é salvo no navegador nem enviado para nenhum servidor além do GitHub. Use um token restrito ao repositório magic-player, com permissão Contents: Read and write. Nunca compartilhe esse token.</p>
+<div class="actions"><button id="connect">CONECTAR AO GITHUB</button></div>
+<div class="status" id="status">Aguardando conexão.</div>
+</section>
+<section class="panel hidden" id="manager">
+<div class="topline"><h2 id="formTitle">Novo cadastro</h2><span class="tag" id="count">0 cadastros</span></div>
+<input id="editId" type="hidden">
+<div class="field"><label for="name">Nome da fotografia</label><input id="name" maxlength="100" placeholder="Ex.: Foto de casamento"></div>
+<div class="grid">
+<div class="field"><label for="photoUrl">Link direto da fotografia</label><input id="photoUrl" type="url" placeholder="https://..."></div>
+<div class="field"><label for="videoUrl">Link direto do vídeo</label><input id="videoUrl" type="url" placeholder="https://...mp4"></div>
+</div>
+<p class="hint">Use links públicos e diretos. O link da foto deve abrir a própria imagem; o vídeo deve ser um arquivo MP4 ou WebM reproduzível no navegador.</p>
+<div class="actions"><button id="save">SALVAR CADASTRO NO GITHUB</button><button class="secondary hidden" id="cancel">CANCELAR EDIÇÃO</button></div>
+<div class="status" id="formStatus">Preencha os campos para cadastrar uma fotografia.</div>
+</section>
+<section class="panel hidden" id="listPanel">
+<div class="topline"><h2>Fotografias cadastradas</h2><button class="secondary" id="reload">ATUALIZAR LISTA</button></div>
+<div id="items"><p class="muted">Nenhum cadastro ainda.</p></div>
+</section>
+</main>
+<script>
+const OWNER='adoniasnascimento93-blip',REPO='magic-player',PATH='ar/cadastros.json',BRANCH='main';
+const $=id=>document.getElementById(id);let token='',records=[],fileSha='';
+const status=(s)=>$('status').textContent=s;
+function encode64(s){const bytes=new TextEncoder().encode(s);let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin)}
+function decode64(s){const bin=atob(s.replace(/\s/g,''));const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}
+async function api(path,options={}){const r=await fetch('https://api.github.com'+path,{...options,headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28',...(options.headers||{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||('Erro GitHub '+r.status));return data}
+async function load(){const d=await api('/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH);fileSha=d.sha;const parsed=JSON.parse(decode64(d.content));records=Array.isArray(parsed.cadastros)?parsed.cadastros:[];render()}
+function render(){$('count').textContent=records.length+' cadastro(s)';const host=$('items');host.innerHTML='';if(!records.length){host.innerHTML='<p class="muted">Nenhuma fotografia cadastrada. Use o formulário acima para começar.</p>';return}records.forEach(r=>{const el=document.createElement('div');el.className='item';const img=document.createElement('img');img.className='thumb';img.src=r.photoUrl;img.alt='';img.onerror=()=>img.style.visibility='hidden';const info=document.createElement('div');info.className='iteminfo';const title=document.createElement('strong');title.textContent=r.name;const detail=document.createElement('small');detail.textContent=r.photoUrl;info.append(title,detail);const edit=document.createElement('button');edit.className='secondary';edit.textContent='EDITAR';edit.onclick=()=>editRecord(r.id);const del=document.createElement('button');del.className='danger';del.textContent='EXCLUIR';del.onclick=()=>deleteRecord(r.id);el.append(img,info,edit,del);host.append(el)})}
+$('connect').onclick=async()=>{token=$('token').value.trim();if(!token){status('Cole o token de acesso para continuar.');return}$('connect').disabled=true;status('Conectando ao GitHub e carregando os cadastros…');try{await load();$('manager').classList.remove('hidden');$('listPanel').classList.remove('hidden');$('access').classList.add('hidden');$('token').value=''}catch(e){token='';status('Não foi possível conectar: '+e.message+'\nConfira o token e a permissão Contents: Read and write.');$('connect').disabled=false}};
+function resetForm(){$('editId').value='';$('name').value='';$('photoUrl').value='';$('videoUrl').value='';$('formTitle').textContent='Novo cadastro';$('cancel').classList.add('hidden');$('formStatus').textContent='Preencha os campos para cadastrar uma fotografia.'}
+function editRecord(id){const r=records.find(x=>x.id===id);if(!r)return;$('editId').value=r.id;$('name').value=r.name;$('photoUrl').value=r.photoUrl;$('videoUrl').value=r.videoUrl;$('formTitle').textContent='Editar cadastro';$('cancel').classList.remove('hidden');$('formStatus').textContent='Altere os dados e salve.';window.scrollTo({top:0,behavior:'smooth'})}
+async function persist(){const body=JSON.stringify({version:1,cadastros:records},null,2)+'\n';const payload={message:'Atualizar cadastros do MAGIC PHOTO AR',content:encode64(body),branch:BRANCH,sha:fileSha};const out=await api('/repos/'+OWNER+'/'+REPO+'/contents/'+PATH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});fileSha=out.content.sha}
+$('save').onclick=async()=>{const name=$('name').value.trim(),photoUrl=$('photoUrl').value.trim(),videoUrl=$('videoUrl').value.trim(),id=$('editId').value;if(!name||!photoUrl||!videoUrl){$('formStatus').textContent='Preencha o nome e os dois links.';return}try{new URL(photoUrl);new URL(videoUrl)}catch{$('formStatus').textContent='Confira os links: eles precisam ser URLs válidas.';return}const old=records.slice();if(id){records=records.map(r=>r.id===id?{...r,name,photoUrl,videoUrl,updatedAt:new Date().toISOString()}:r)}else{records.push({id:crypto.randomUUID(),name,photoUrl,videoUrl,createdAt:new Date().toISOString()})}$('save').disabled=true;$('formStatus').textContent='Salvando no GitHub…';try{await persist();render();resetForm();$('formStatus').textContent='Cadastro salvo com sucesso no GitHub!'}catch(e){records=old;$('formStatus').textContent='Falha ao salvar: '+e.message+'\nOs dados não foram publicados.'}finally{$('save').disabled=false}};
+async function deleteRecord(id){const r=records.find(x=>x.id===id);if(!r||!confirm('Excluir o cadastro “'+r.name+'”?'))return;const old=records.slice();records=records.filter(x=>x.id!==id);try{await persist();render();if($('editId').value===id)resetForm()}catch(e){records=old;render();alert('Não foi possível excluir: '+e.message)}}
+$('cancel').onclick=resetForm;$('reload').onclick=async()=>{const b=$('reload');b.disabled=true;try{await load()}catch(e){alert('Erro ao atualizar: '+e.message)}finally{b.disabled=false}};
+</script>
+</body></html>
