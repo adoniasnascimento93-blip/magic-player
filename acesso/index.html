@@ -14,6 +14,10 @@ body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,ui-sans-
 body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 15% 5%,#34236b66,transparent 38%),radial-gradient(ellipse at 90% 35%,#075b7660,transparent 34%),linear-gradient(180deg,#080b18,#0b1020 65%,#080b18)}
 a{color:inherit;text-decoration:none}
 .wrap{width:min(1120px,calc(100% - 40px));margin:auto}
+#experience{display:none;position:fixed;inset:0;width:100%;height:100%;height:100dvh;background:#000;z-index:9999}
+#experience.open{display:block}
+#experience iframe{border:0;width:100%;height:100%;display:block;background:#000}
+#closeExperience{position:absolute;z-index:2;left:14px;top:max(14px,env(safe-area-inset-top));border:1px solid #ffffff45;border-radius:99px;background:#101522c9;color:#fff;padding:9px 13px;font-weight:700;font-size:11px;backdrop-filter:blur(12px)}
 nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}
 .logo{font-size:19px;font-weight:950;letter-spacing:1.6px}.logo b{color:var(--cyan)}
 .navtag{font-size:12px;color:#c5d0e7;border:1px solid #ffffff25;border-radius:99px;padding:8px 12px}
@@ -63,7 +67,7 @@ footer{border-top:1px solid #ffffff12;padding:25px 0;color:#7f8ba5;font-size:12p
 <div class="eyebrow"><i class="dot"></i> Uma nova forma de guardar momentos</div>
 <h1>Uma foto.<br>Uma lembrança.<br><span>Uma experiência viva.</span></h1>
 <p class="lead">Suas fotografias podem revelar muito mais. Aponte a câmera do celular para uma foto cadastrada e veja um vídeo ganhar vida sobre ela, como mágica.</p>
-<a class="cta" href="https://magic.runs-at.dev/ar/?iniciar=1">
+<a class="cta" href="#experiencia" data-ar-launch>
 <span>VIVER A EXPERIÊNCIA</span>
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 </a>
@@ -96,5 +100,31 @@ footer{border-top:1px solid #ffffff12;padding:25px 0;color:#7f8ba5;font-size:12p
 </main>
 <footer>MAGIC PHOTO AR · Uma experiência criada pela SUBLIMArt</footer>
 </div>
+<div id="experience" aria-hidden="true">
+<button id="closeExperience">← VOLTAR</button>
+<iframe id="experienceFrame" title="Experiência MAGIC PHOTO AR" allow="camera; fullscreen; autoplay" allowfullscreen></iframe>
+</div>
+<script>
+const experience=document.getElementById('experience');
+const experienceFrame=document.getElementById('experienceFrame');
+function closeExperience(){
+ experience.classList.remove('open');
+ experience.setAttribute('aria-hidden','true');
+ experienceFrame.src='about:blank';
+ if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+ document.body.style.overflow='';
+}
+document.querySelectorAll('[data-ar-launch]').forEach(link=>link.addEventListener('click',async event=>{
+ event.preventDefault();
+ experience.classList.add('open');
+ experience.setAttribute('aria-hidden','false');
+ document.body.style.overflow='hidden';
+ const request=document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen;
+ if(request){try{await request.call(document.documentElement)}catch(e){}}
+ experienceFrame.src='https://magic.runs-at.dev/ar/?iniciar=1';
+}));
+document.getElementById('closeExperience').addEventListener('click',closeExperience);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&experience.classList.contains('open'))closeExperience()});
+</script>
 </body>
 </html>
