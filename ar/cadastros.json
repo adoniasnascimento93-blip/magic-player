@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "cadastros": []
+  "cadastros": [
+    {
+      "id": "f83dc95e-4e8e-472f-8c4d-9c6bd2a7305f",
+      "name": "Foto de Celine",
+      "photoUrl": "https://i.imgur.com/wUMR1Xv.jpeg",
+      "videoUrl": "https://i.imgur.com/Yd7QG5Q.mp4",
+      "createdAt": "2026-11-27T23:25:03.154Z"
+    }
+  ]
 }
