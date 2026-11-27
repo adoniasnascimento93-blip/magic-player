@@ -55,7 +55,8 @@ $('start').addEventListener('click',async()=>{
   const buffer=await compiler.exportData();
   mindUrl=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));
   videoUrl=URL.createObjectURL(videoFile);
-  $('preview').classList.add('active');\n  const ratio=image.width/image.height;
+  $('preview').classList.add('active');
+  const ratio=image.width/image.height;
   const planeW=1,planeH=1/ratio;
   const container=$('arContainer');container.innerHTML='';
   const sceneEl=document.createElement('a-scene');
