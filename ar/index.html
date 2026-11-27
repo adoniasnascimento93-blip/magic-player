@@ -7,7 +7,7 @@
 <title>MAGIC PHOTO AR</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font:14px system-ui,sans-serif}
-#arContainer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000;z-index:1}
+#cameraPreview{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#000;z-index:0}#arContainer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000;z-index:1}
 #arContainer a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important;background:transparent!important}
 #arContainer canvas{background:transparent!important}
 #loading{position:fixed;z-index:5;left:50%;bottom:max(28px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(310px,calc(100vw - 48px));padding:13px 16px 12px;border:1px solid #ffffff20;border-radius:15px;background:#101522d9;backdrop-filter:blur(14px);box-shadow:0 8px 35px #0008;transition:opacity .35s,transform .35s}
@@ -28,7 +28,7 @@
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
-<div id="arContainer"></div>
+<video id="cameraPreview" autoplay muted playsinline></video><div id="arContainer"></div>
 <div id="loading">
  <div class="loadtop"><span id="message">Preparando sua experiência…</span><strong id="percent">0%</strong></div>
  <div class="track"><div id="fill"></div></div>
@@ -39,12 +39,14 @@
 <script>
 const $=id=>document.getElementById(id);
 const CATALOG_URL='./cadastros.json';
-let records=[],scene=null,mindUrl=null,videos=[],muted=true,compiled=false;
+let records=[],scene=null,mindUrl=null,videos=[],muted=true,compiled=false,previewStream=null;
 const say=(message)=>{$('message').textContent=message};
 function progress(value,message){const n=Math.max(0,Math.min(100,Math.round(value)));$('percent').textContent=n+'%';$('fill').style.width=n+'%';if(message)say(message)}
 function showError(message){$('error').textContent=message;$('error').classList.add('show');$('loading').classList.remove('done')}
 function loadImage(url){return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Não foi possível carregar uma fotografia. Verifique se o link é público e permite acesso externo (CORS).'));img.src=url})}
 function waitForScene(el){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('A câmera demorou para iniciar.')),30000);el.addEventListener('loaded',()=>{clearTimeout(timer);resolve()},{once:true});el.addEventListener('arError',()=>{clearTimeout(timer);reject(new Error('Erro ao iniciar a câmera.'))},{once:true})})}
+async function startPreview(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('Seu navegador não permite abrir a câmera.');previewStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'}}});$('cameraPreview').srcObject=previewStream;await $('cameraPreview').play().catch(()=>{});}catch(e){throw new Error('Não foi possível abrir a câmera. Autorize o acesso e tente novamente. '+(e.message||''))}}
+function stopPreview(){if(previewStream){previewStream.getTracks().forEach(t=>t.stop());previewStream=null;}$('cameraPreview').srcObject=null;$('cameraPreview').style.display='none'}
 async function loadCatalog(){try{const res=await fetch(CATALOG_URL+'?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('Não foi possível consultar a lista de fotografias.');const data=await res.json();records=Array.isArray(data.cadastros)?data.cadastros:[];if(!records.length){say('Ainda não existem fotografias cadastradas.');$('start').disabled=true;return}say(records.length+' fotografia(s) encontrada(s). Preparando a câmera…');}catch(e){say(e.message);$('start').disabled=true}}
 async function stopCamera(){if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}videos.forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch{}});videos=[];if(mindUrl)URL.revokeObjectURL(mindUrl);mindUrl=null}
 $('start').addEventListener('click',async()=>{
@@ -52,7 +54,7 @@ $('start').addEventListener('click',async()=>{
  try{
   if(!records.length)throw new Error('Nenhuma fotografia cadastrada foi encontrada.');
   if(!window.MINDAR||!window.MINDAR.IMAGE||!window.MINDAR.IMAGE.Compiler)throw new Error('A biblioteca de reconhecimento não carregou. Atualize a página.');
-  await stopCamera();$('error').classList.remove('show');$('loading').classList.remove('done');$('controls').classList.remove('show');progress(2,'Iniciando câmera e referências…');
+  await stopCamera();$('error').classList.remove('show');$('loading').classList.remove('done');$('controls').classList.remove('show');$('cameraPreview').style.display='block';progress(2,'Abrindo câmera…');await startPreview();progress(8,'Câmera aberta. Preparando fotografias…');
   const images=[];for(let i=0;i<records.length;i++){progress(5+20*((i+1)/records.length),'Carregando fotografias '+(i+1)+' de '+records.length+'…');images.push(await loadImage(records[i].photoUrl))}
   progress(27,'Preparando reconhecimento das fotografias…');
   const compiler=new window.MINDAR.IMAGE.Compiler();
@@ -77,13 +79,13 @@ $('start').addEventListener('click',async()=>{
    target.addEventListener('targetLost',()=>{plane.object3D.visible=false;video.pause();say('Aponte para uma das fotografias cadastradas…')});
    sceneEl.appendChild(target);
   });
-  container.appendChild(sceneEl);scene=sceneEl;await waitForScene(sceneEl);
+  stopPreview();container.appendChild(sceneEl);scene=sceneEl;await waitForScene(sceneEl);
   progress(100,'Tudo pronto! Aponte para uma foto.');$('controls').classList.add('show');setTimeout(()=>$('loading').classList.add('done'),650);
- }catch(err){const msg='Não foi possível iniciar: '+(err.message||err);say(msg);showError(msg);await stopCamera()}
+ }catch(err){const msg='Não foi possível iniciar: '+(err.message||err);say(msg);showError(msg);stopPreview();await stopCamera()}
  finally{btn.disabled=false}
 });
 $('sound').addEventListener('click',()=>{muted=!muted;videos.forEach(v=>{v.muted=muted;if(!muted&&!v.paused)v.play().catch(()=>{})});$('sound').textContent=muted?'ATIVAR SOM':'SOM ATIVADO'});
-$('stop').addEventListener('click',async()=>{await stopCamera();$('controls').classList.remove('show');progress(0,'Experiência encerrada. Recarregue a página para iniciar novamente.');$('loading').classList.remove('done')});
+$('stop').addEventListener('click',async()=>{stopPreview();await stopCamera();$('controls').classList.remove('show');progress(0,'Experiência encerrada. Recarregue a página para iniciar novamente.');$('loading').classList.remove('done')});
 loadCatalog().then(()=>{
  if(records.length){progress(1,'Preparando sua experiência…');$('start').click()}
 });
