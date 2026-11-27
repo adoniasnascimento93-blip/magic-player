@@ -38,7 +38,7 @@ header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-co
 <footer>MAGIC PHOTO AR · Uma experiência da SUBLIMArt</footer>
 <script>
 const $=id=>document.getElementById(id);
-let photoFile=null,videoFile=null,scene=null,mindUrl=null,videoUrl=null,photoUrl=null,muted=true,foundCount=0,lostCount=0;
+let photoFile=null,videoFile=null,scene=null,mindUrl=null,videoUrl=null,muted=true,foundCount=0,lostCount=0;
 const say=(message)=>{$('status').textContent=message};
 $('photo').addEventListener('change',e=>{photoFile=e.target.files[0]||null;check()});
 $('video').addEventListener('change',e=>{videoFile=e.target.files[0]||null;check()});
@@ -55,7 +55,6 @@ $('start').addEventListener('click',async()=>{
   const buffer=await compiler.exportData();
   mindUrl=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));
   videoUrl=URL.createObjectURL(videoFile);
-  photoUrl=URL.createObjectURL(photoFile);
   $('preview').classList.add('active');
   const ratio=image.width/image.height;
   const planeW=1,planeH=1/ratio;
@@ -68,20 +67,19 @@ $('start').addEventListener('click',async()=>{
   sceneEl.style.position='absolute';sceneEl.style.inset='0';sceneEl.style.width='100%';sceneEl.style.height='100%';sceneEl.style.background='transparent';
   const assets=document.createElement('a-assets');
   const vid=document.createElement('video');vid.id='magicVideo';vid.src=videoUrl;vid.setAttribute('loop','');vid.setAttribute('muted','');vid.setAttribute('playsinline','');vid.setAttribute('webkit-playsinline','');vid.preload='auto';vid.crossOrigin='anonymous';assets.appendChild(vid);
-  const referenceImage=document.createElement('img');referenceImage.id='referenceImage';referenceImage.src=photoUrl;assets.appendChild(referenceImage);
   const camera=document.createElement('a-camera');camera.setAttribute('position','0 0 0');camera.setAttribute('look-controls','enabled: false');
   const target=document.createElement('a-entity');target.setAttribute('mindar-image-target','targetIndex: 0');
-  const plane=document.createElement('a-image');plane.setAttribute('src','#referenceImage');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0.002');plane.setAttribute('rotation','0 0 0');plane.setAttribute('material','shader: flat; transparent: false; side: double; depthTest: true; depthWrite: true');plane.setAttribute('visible','true');
+  const plane=document.createElement('a-video');plane.setAttribute('src','#magicVideo');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0.002');plane.setAttribute('rotation','0 0 0');plane.setAttribute('material','shader: flat; transparent: false; side: double; depthTest: true; depthWrite: true');plane.setAttribute('visible','true');
   target.appendChild(plane);plane.object3D.visible=false;sceneEl.append(assets,camera,target);container.appendChild(sceneEl);scene=sceneEl;
   target.addEventListener('targetFound',()=>{foundCount++;plane.object3D.visible=true;say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Foto detectada.');const v=$('magicVideo');v.play().catch(()=>say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Toque em ATIVAR SOM para iniciar.'))});
   target.addEventListener('targetLost',()=>{lostCount++;plane.object3D.visible=false;$('magicVideo').pause();say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Foto perdida; procurando novamente.')} );
   await waitForScene(sceneEl);
   say('Câmera iniciada! Aponte para a fotografia cadastrada.');
-  const v=$('magicVideo');v.play().catch(()=>{});
+  const v=$('magicVideo');v.pause();v.currentTime=0;
  }catch(err){say('Não foi possível iniciar: '+(err.message||err));$('preview').classList.remove('active');if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene=null}}
  finally{btn.disabled=false;btn.textContent='TENTAR NOVAMENTE'}
 });
 $('sound').addEventListener('click',()=>{const v=$('magicVideo');if(!v)return;muted=!muted;v.muted=muted;if(!muted)v.play().catch(()=>{});$('sound').textContent=muted?'ATIVAR SOM':'SOM ATIVADO'});
-$('stop').addEventListener('click',()=>{if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}$('preview').classList.remove('active');say('Câmera encerrada. Você pode selecionar outros arquivos e testar novamente.');$('start').textContent='PREPARAR REALIDADE AUMENTADA';if(mindUrl)URL.revokeObjectURL(mindUrl);if(videoUrl)URL.revokeObjectURL(videoUrl);if(photoUrl)URL.revokeObjectURL(photoUrl);mindUrl=null;videoUrl=null;photoUrl=null});
+$('stop').addEventListener('click',()=>{if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}$('preview').classList.remove('active');say('Câmera encerrada. Você pode selecionar outros arquivos e testar novamente.');$('start').textContent='PREPARAR REALIDADE AUMENTADA';if(mindUrl)URL.revokeObjectURL(mindUrl);if(videoUrl)URL.revokeObjectURL(videoUrl);mindUrl=null;videoUrl=null});
 </script>
 </body></html>
