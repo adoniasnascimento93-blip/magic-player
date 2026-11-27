@@ -45,8 +45,8 @@ function progress(value,message){const n=Math.max(0,Math.min(100,Math.round(valu
 function showError(message){$('error').textContent=message;$('error').classList.add('show');$('loading').classList.remove('done')}
 function loadImage(url){return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Não foi possível carregar uma fotografia. Verifique se o link é público e permite acesso externo (CORS).'));img.src=url})}
 function waitForScene(el){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('A câmera demorou para iniciar.')),30000);el.addEventListener('loaded',()=>{clearTimeout(timer);resolve()},{once:true});el.addEventListener('arError',()=>{clearTimeout(timer);reject(new Error('Erro ao iniciar a câmera.'))},{once:true})})}
-async function loadCatalog(){try{const res=await fetch(CATALOG_URL+'?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('Não foi possível consultar a lista de fotografias.');const data=await res.json();records=Array.isArray(data.cadastros)?data.cadastros:[];if(!records.length){say('Ainda não existem fotografias cadastradas.');$('start').disabled=true;return}say('Tudo pronto! Toque em INICIAR EXPERIÊNCIA e aponte para uma foto cadastrada.');$('count').textContent=records.length+' fotografia(s) disponível(is)';}catch(e){say(e.message);$('start').disabled=true}}
-async function stopCamera(){if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}videos.forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch{}});videos=[];$('preview').classList.remove('active');if(mindUrl)URL.revokeObjectURL(mindUrl);mindUrl=null}
+async function loadCatalog(){try{const res=await fetch(CATALOG_URL+'?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('Não foi possível consultar a lista de fotografias.');const data=await res.json();records=Array.isArray(data.cadastros)?data.cadastros:[];if(!records.length){say('Ainda não existem fotografias cadastradas.');$('start').disabled=true;return}say(records.length+' fotografia(s) encontrada(s). Preparando a câmera…');}catch(e){say(e.message);$('start').disabled=true}}
+async function stopCamera(){if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}videos.forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch{}});videos=[];if(mindUrl)URL.revokeObjectURL(mindUrl);mindUrl=null}
 $('start').addEventListener('click',async()=>{
  const btn=$('start');btn.disabled=true;
  try{
@@ -77,7 +77,7 @@ $('start').addEventListener('click',async()=>{
    target.addEventListener('targetLost',()=>{plane.object3D.visible=false;video.pause();say('Aponte para uma das fotografias cadastradas…')});
    sceneEl.appendChild(target);
   });
-  $('preview').classList.add('active');container.appendChild(sceneEl);scene=sceneEl;await waitForScene(sceneEl);
+  container.appendChild(sceneEl);scene=sceneEl;await waitForScene(sceneEl);
   progress(100,'Tudo pronto! Aponte para uma foto.');$('controls').classList.add('show');setTimeout(()=>$('loading').classList.add('done'),650);
  }catch(err){const msg='Não foi possível iniciar: '+(err.message||err);say(msg);showError(msg);await stopCamera()}
  finally{btn.disabled=false}
