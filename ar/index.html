@@ -6,38 +6,43 @@
 <meta name="theme-color" content="#090d18">
 <title>MAGIC PHOTO AR</title>
 <style>
-:root{color-scheme:dark;--bg:#090d18;--panel:#141b2b;--line:#2b3852;--muted:#a8b5cc;--violet:#8b5cf6;--cyan:#22d3ee}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20274a 0,#090d18 58%);font:15px system-ui,sans-serif;color:#f7f8ff;min-height:100vh}
-header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:21px;font-weight:900;letter-spacing:1.5px}.brand span{color:var(--cyan)}
-main{max-width:850px;margin:32px auto;padding:0 16px}.panel{background:#141b2bf2;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 20px 70px #0005}h1{font-size:clamp(26px,5vw,38px);margin:0 0 8px}p{color:var(--muted);line-height:1.55}.btn,button{border:0;border-radius:12px;padding:13px 18px;background:linear-gradient(110deg,var(--violet),#526df5);color:white;font-weight:800;cursor:pointer;font-size:14px}.btn:disabled,button:disabled{opacity:.5;cursor:wait}.secondary{background:#26334c;border:1px solid #40516f}.status{margin:16px 0;padding:13px 15px;border:1px dashed #52627f;border-radius:12px;color:#c7d5ef;min-height:48px}.preview{display:none;margin-top:20px;background:transparent;border-radius:16px;overflow:hidden;min-height:55vh;position:relative}.preview.active{display:block}#arContainer{position:relative;width:100%;height:72vh;min-height:480px;overflow:hidden;background:transparent}#arContainer a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important;min-height:0!important;background:transparent!important}#arContainer canvas{background:transparent!important}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:13px}.pill{display:inline-block;border:1px solid #42516c;border-radius:99px;padding:5px 10px;color:#c5d5ef;font-size:12px}footer{text-align:center;color:#71809d;padding:28px 12px}
-@media(max-width:600px){header{padding:16px}.panel{padding:17px}main{margin:18px auto;padding:0 10px}#arContainer{height:75vh;min-height:420px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font:14px system-ui,sans-serif}
+#arContainer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000;z-index:1}
+#arContainer a-scene{position:absolute!important;inset:0;width:100%!important;height:100%!important;background:transparent!important}
+#arContainer canvas{background:transparent!important}
+#loading{position:fixed;z-index:5;left:50%;bottom:max(28px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(310px,calc(100vw - 48px));padding:13px 16px 12px;border:1px solid #ffffff20;border-radius:15px;background:#101522d9;backdrop-filter:blur(14px);box-shadow:0 8px 35px #0008;transition:opacity .35s,transform .35s}
+#loading.done{opacity:0;pointer-events:none;transform:translate(-50%,12px)}
+.loadtop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px;color:#dce6fa;font-size:12px}
+#percent{font-variant-numeric:tabular-nums;color:#9eeeff;font-weight:800}
+.track{height:4px;border-radius:99px;background:#ffffff20;overflow:hidden}
+#fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#8b5cf6,#22d3ee);transition:width .18s ease}
+#controls{position:fixed;z-index:4;right:14px;top:max(14px,env(safe-area-inset-top));display:flex;gap:8px;opacity:0;pointer-events:none;transition:opacity .3s}
+#controls.show{opacity:1;pointer-events:auto}
+#controls button{border:1px solid #ffffff35;background:#101522b8;color:white;border-radius:99px;padding:10px 13px;font-weight:700;font-size:11px;backdrop-filter:blur(12px)}
+#start{display:none}
+#error{position:fixed;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100vw - 36px));padding:20px;border-radius:16px;background:#151a28ed;border:1px solid #ffffff30;text-align:center;display:none;line-height:1.5}
+#error.show{display:block}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
-<header><div class="brand">MAGIC<span> PHOTO AR</span></div><span class="pill">REALIDADE AUMENTADA</span></header>
-<main>
-<section class="panel">
-<p class="pill">EXPERIÊNCIA INTERATIVA</p>
-<h1>Faça sua fotografia ganhar vida.</h1>
-<p>Toque no botão abaixo e permita o acesso à câmera. Depois, aponte o celular para uma das fotografias cadastradas no MAGIC PHOTO AR.</p>
-<button id="start">INICIAR EXPERIÊNCIA</button>
-<div class="status" id="status">Carregando fotografias cadastradas…</div>
-<p class="note" id="count"></p>
-</section>
-<section class="preview" id="preview">
 <div id="arContainer"></div>
-<div class="bar" style="padding:12px"><button class="secondary" id="sound">ATIVAR SOM</button><button class="secondary" id="stop">ENCERRAR CÂMERA</button></div>
-</section>
-</main>
-<footer>MAGIC PHOTO AR · Uma experiência da SUBLIMArt</footer>
+<div id="loading">
+ <div class="loadtop"><span id="message">Preparando sua experiência…</span><strong id="percent">0%</strong></div>
+ <div class="track"><div id="fill"></div></div>
+</div>
+<div id="controls"><button id="sound">ATIVAR SOM</button><button id="stop">SAIR</button></div>
+<div id="error"></div>
+<button id="start" aria-hidden="true">INICIAR</button>
 <script>
 const $=id=>document.getElementById(id);
 const CATALOG_URL='./cadastros.json';
 let records=[],scene=null,mindUrl=null,videos=[],muted=true,compiled=false;
-const say=(message)=>{$('status').textContent=message};
+const say=(message)=>{$('message').textContent=message};
+function progress(value,message){const n=Math.max(0,Math.min(100,Math.round(value)));$('percent').textContent=n+'%';$('fill').style.width=n+'%';if(message)say(message)}
+function showError(message){$('error').textContent=message;$('error').classList.add('show');$('loading').classList.remove('done')}
 function loadImage(url){return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Não foi possível carregar uma fotografia. Verifique se o link é público e permite acesso externo (CORS).'));img.src=url})}
 function waitForScene(el){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('A câmera demorou para iniciar.')),30000);el.addEventListener('loaded',()=>{clearTimeout(timer);resolve()},{once:true});el.addEventListener('arError',()=>{clearTimeout(timer);reject(new Error('Erro ao iniciar a câmera.'))},{once:true})})}
 async function loadCatalog(){try{const res=await fetch(CATALOG_URL+'?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('Não foi possível consultar a lista de fotografias.');const data=await res.json();records=Array.isArray(data.cadastros)?data.cadastros:[];if(!records.length){say('Ainda não existem fotografias cadastradas.');$('start').disabled=true;return}say('Tudo pronto! Toque em INICIAR EXPERIÊNCIA e aponte para uma foto cadastrada.');$('count').textContent=records.length+' fotografia(s) disponível(is)';}catch(e){say(e.message);$('start').disabled=true}}
@@ -47,12 +52,12 @@ $('start').addEventListener('click',async()=>{
  try{
   if(!records.length)throw new Error('Nenhuma fotografia cadastrada foi encontrada.');
   if(!window.MINDAR||!window.MINDAR.IMAGE||!window.MINDAR.IMAGE.Compiler)throw new Error('A biblioteca de reconhecimento não carregou. Atualize a página.');
-  await stopCamera();say('Carregando as fotografias de referência…');
-  const images=[];for(let i=0;i<records.length;i++){say('Carregando fotografia '+(i+1)+' de '+records.length+'…');images.push(await loadImage(records[i].photoUrl))}
-  say('Preparando o reconhecimento das fotografias…');
+  await stopCamera();$('error').classList.remove('show');$('loading').classList.remove('done');$('controls').classList.remove('show');progress(2,'Iniciando câmera e referências…');
+  const images=[];for(let i=0;i<records.length;i++){progress(5+20*((i+1)/records.length),'Carregando fotografias '+(i+1)+' de '+records.length+'…');images.push(await loadImage(records[i].photoUrl))}
+  progress(27,'Preparando reconhecimento das fotografias…');
   const compiler=new window.MINDAR.IMAGE.Compiler();
-  await compiler.compileImageTargets(images,p=>say('Preparando reconhecimento: '+p.toFixed(0)+'%'));
-  const buffer=await compiler.exportData();mindUrl=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));
+  await compiler.compileImageTargets(images,p=>progress(27+p*0.68,'Preparando reconhecimento…'));
+  progress(96,'Finalizando experiência…');const buffer=await compiler.exportData();mindUrl=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));
   const container=$('arContainer');container.innerHTML='';
   const sceneEl=document.createElement('a-scene');
   sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 8; missTolerance: 12');
@@ -73,17 +78,14 @@ $('start').addEventListener('click',async()=>{
    sceneEl.appendChild(target);
   });
   $('preview').classList.add('active');container.appendChild(sceneEl);scene=sceneEl;await waitForScene(sceneEl);
-  say('Câmera ativa! Aponte para uma das '+records.length+' fotografias cadastradas.');
- }catch(err){say('Não foi possível iniciar: '+(err.message||err));await stopCamera()}
+  progress(100,'Tudo pronto! Aponte para uma foto.');$('controls').classList.add('show');setTimeout(()=>$('loading').classList.add('done'),650);
+ }catch(err){const msg='Não foi possível iniciar: '+(err.message||err);say(msg);showError(msg);await stopCamera()}
  finally{btn.disabled=false}
 });
 $('sound').addEventListener('click',()=>{muted=!muted;videos.forEach(v=>{v.muted=muted;if(!muted&&!v.paused)v.play().catch(()=>{})});$('sound').textContent=muted?'ATIVAR SOM':'SOM ATIVADO'});
-$('stop').addEventListener('click',async()=>{await stopCamera();say('Câmera encerrada. Toque em INICIAR EXPERIÊNCIA para começar novamente.')});
+$('stop').addEventListener('click',async()=>{await stopCamera();$('controls').classList.remove('show');progress(0,'Experiência encerrada. Recarregue a página para iniciar novamente.');$('loading').classList.remove('done')});
 loadCatalog().then(()=>{
- if(new URLSearchParams(location.search).get('iniciar')==='1' && records.length){
-  say('Preparando sua experiência automaticamente…');
-  $('start').click();
- }
+ if(records.length){progress(1,'Preparando sua experiência…');$('start').click()}
 });
 </script>
 </body></html>
