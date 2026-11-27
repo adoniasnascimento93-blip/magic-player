@@ -38,7 +38,7 @@ header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-co
 <footer>MAGIC PHOTO AR · Uma experiência da SUBLIMArt</footer>
 <script>
 const $=id=>document.getElementById(id);
-let photoFile=null,videoFile=null,scene=null,mindUrl=null,videoUrl=null,muted=true;
+let photoFile=null,videoFile=null,scene=null,mindUrl=null,videoUrl=null,muted=true,foundCount=0,lostCount=0;
 const say=(message)=>{$('status').textContent=message};
 $('photo').addEventListener('change',e=>{photoFile=e.target.files[0]||null;check()});
 $('video').addEventListener('change',e=>{videoFile=e.target.files[0]||null;check()});
@@ -71,8 +71,8 @@ $('start').addEventListener('click',async()=>{
   const target=document.createElement('a-entity');target.setAttribute('mindar-image-target','targetIndex: 0');
   const plane=document.createElement('a-video');plane.setAttribute('src','#magicVideo');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0');plane.setAttribute('rotation','0 0 0');
   target.appendChild(plane);plane.object3D.visible=false;sceneEl.append(assets,camera,target);container.appendChild(sceneEl);scene=sceneEl;
-  target.addEventListener('targetFound',()=>{plane.object3D.visible=true;say('Fotografia reconhecida! A animação está acompanhando a imagem.');const v=$('magicVideo');v.play().catch(()=>say('Imagem reconhecida. Toque em ATIVAR SOM para iniciar o vídeo.'))});
-  target.addEventListener('targetLost',()=>{plane.object3D.visible=false;$('magicVideo').pause();say('Fotografia fora de visão. Aponte a câmera novamente para continuar.')} );
+  target.addEventListener('targetFound',()=>{foundCount++;plane.object3D.visible=true;say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Foto detectada.');const v=$('magicVideo');v.play().catch(()=>say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Toque em ATIVAR SOM para iniciar.'))});
+  target.addEventListener('targetLost',()=>{lostCount++;plane.object3D.visible=false;$('magicVideo').pause();say('Reconhecimentos: '+foundCount+' | perdas: '+lostCount+'. Foto perdida; procurando novamente.')} );
   await waitForScene(sceneEl);
   say('Câmera iniciada! Aponte para a fotografia cadastrada.');
   const v=$('magicVideo');v.play().catch(()=>{});
