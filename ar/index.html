@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d18">
+<title>MAGIC PHOTO AR · Laboratório</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#141b2b;--line:#2b3852;--muted:#a8b5cc;--violet:#8b5cf6;--cyan:#22d3ee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20274a 0,#090d18 58%);font:15px system-ui,sans-serif;color:#f7f8ff;min-height:100vh}
+header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:21px;font-weight:900;letter-spacing:1.5px}.brand span{color:var(--cyan)}main{max-width:850px;margin:32px auto;padding:0 16px}.panel{background:#141b2bf2;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 20px 70px #0005}h1{font-size:clamp(26px,5vw,38px);margin:0 0 8px}p{color:var(--muted);line-height:1.55}.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:22px 0}.field{background:#0c1322;border:1px solid var(--line);border-radius:14px;padding:16px}.field label{font-weight:750;display:block;margin-bottom:8px}.field input{width:100%;color:#eaf1ff}small{display:block;color:var(--muted);margin-top:7px;line-height:1.4}.btn,button{border:0;border-radius:12px;padding:13px 18px;background:linear-gradient(110deg,var(--violet),#526df5);color:white;font-weight:800;cursor:pointer;font-size:14px}.btn:disabled,button:disabled{opacity:.5;cursor:wait}.secondary{background:#26334c;border:1px solid #40516f}.status{margin:16px 0;padding:13px 15px;border:1px dashed #52627f;border-radius:12px;color:#c7d5ef;min-height:48px}.preview{display:none;margin-top:20px;background:#03060c;border-radius:16px;overflow:hidden;min-height:55vh;position:relative}.preview.active{display:block}.preview a-scene{width:100%;height:72vh;min-height:480px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:13px}.pill{display:inline-block;border:1px solid #42516c;border-radius:99px;padding:5px 10px;color:#c5d5ef;font-size:12px}footer{text-align:center;color:#71809d;padding:28px 12px}
+@media(max-width:600px){header{padding:16px}.steps{grid-template-columns:1fr}.panel{padding:17px}main{margin:18px auto;padding:0 10px}.preview a-scene{height:75vh;min-height:420px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+<header><div class="brand">MAGIC<span> PHOTO AR</span></div><span class="pill">PROTÓTIPO 01</span></header>
+<main>
+<section class="panel" id="setup">
+<p class="pill">LABORATÓRIO DE TESTES</p>
+<h1>Faça sua fotografia ganhar vida.</h1>
+<p>Escolha a fotografia impressa que será reconhecida e o vídeo que deverá aparecer sobre ela. O processamento é feito no próprio navegador. Depois, aponte a câmera para a foto impressa ou exibida em outra tela.</p>
+<div class="steps">
+<div class="field"><label for="photo">1. Fotografia de referência</label><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"><small>Use a mesma imagem que foi impressa. Fotos nítidas, com detalhes variados, rastreiam melhor.</small></div>
+<div class="field"><label for="video">2. Vídeo da animação</label><input id="video" type="file" accept="video/mp4,video/webm"><small>Prefira MP4. O vídeo será ajustado ao retângulo da fotografia.</small></div>
+</div>
+<button id="start" disabled>PREPARAR REALIDADE AUMENTADA</button>
+<div class="status" id="status">Selecione uma fotografia e um vídeo para começar.</div>
+<p class="note">Importante: este primeiro protótipo é um teste temporário. Os arquivos não são enviados nem salvos no servidor. A câmera precisa de permissão e o site deve ser aberto por HTTPS.</p>
+</section>
+<section class="preview" id="preview">
+<div id="arContainer"></div>
+<div class="bar" style="padding:12px"><button class="secondary" id="sound">ATIVAR SOM</button><button class="secondary" id="stop">ENCERRAR CÂMERA</button></div>
+</section>
+</main>
+<footer>MAGIC PHOTO AR · Uma experiência da SUBLIMArt</footer>
+<script>
+const $=id=>document.getElementById(id);
+let photoFile=null,videoFile=null,scene=null,mindUrl=null,videoUrl=null,muted=true;
+const say=(message)=>{$('status').textContent=message};
+$('photo').addEventListener('change',e=>{photoFile=e.target.files[0]||null;check()});
+$('video').addEventListener('change',e=>{videoFile=e.target.files[0]||null;check()});
+function check(){$('start').disabled=!(photoFile&&videoFile);if(photoFile&&videoFile)say('Arquivos selecionados. Pronto para preparar o rastreamento.')}
+function loadImage(file){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Não foi possível abrir a fotografia.'));img.src=URL.createObjectURL(file)})}
+function waitForScene(el){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('A cena de realidade aumentada demorou para iniciar.')),30000);el.addEventListener('loaded',()=>{clearTimeout(timer);resolve()}, {once:true});el.addEventListener('arError',()=>{clearTimeout(timer);reject(new Error('Ocorreu um erro ao iniciar a câmera.'))},{once:true})})}
+$('start').addEventListener('click',async()=>{
+ const btn=$('start');btn.disabled=true;$('preview').classList.remove('active');say('Analisando a fotografia e criando o marcador de reconhecimento…');
+ try{
+  if(!window.MINDAR||!window.MINDAR.IMAGE||!window.MINDAR.IMAGE.Compiler)throw new Error('A biblioteca de reconhecimento não carregou. Atualize a página e tente novamente.');
+  const compiler=new window.MINDAR.IMAGE.Compiler();
+  const image=await loadImage(photoFile);
+  await compiler.compileImageTargets([image],p=>say('Preparando fotografia: '+p.toFixed(0)+'%'));
+  const buffer=await compiler.exportData();
+  mindUrl=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));
+  videoUrl=URL.createObjectURL(videoFile);
+  const ratio=image.width/image.height;
+  const planeW=1,planeH=1/ratio;
+  const container=$('arContainer');container.innerHTML='';
+  const sceneEl=document.createElement('a-scene');
+  sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001');
+  sceneEl.setAttribute('embedded','');sceneEl.setAttribute('color-space','sRGB');
+  sceneEl.setAttribute('renderer','colorManagement: true; physicallyCorrectLights: true');
+  sceneEl.setAttribute('vr-mode-ui','enabled: false');sceneEl.setAttribute('device-orientation-permission-ui','enabled: false');
+  sceneEl.style.width='100%';sceneEl.style.height='72vh';sceneEl.style.minHeight='480px';
+  const assets=document.createElement('a-assets');
+  const vid=document.createElement('video');vid.id='magicVideo';vid.src=videoUrl;vid.setAttribute('loop','');vid.setAttribute('muted','');vid.setAttribute('playsinline','');vid.setAttribute('webkit-playsinline','');vid.preload='auto';vid.crossOrigin='anonymous';assets.appendChild(vid);
+  const camera=document.createElement('a-camera');camera.setAttribute('position','0 0 0');camera.setAttribute('look-controls','enabled: false');
+  const target=document.createElement('a-entity');target.setAttribute('mindar-image-target','targetIndex: 0');
+  const plane=document.createElement('a-video');plane.setAttribute('src','#magicVideo');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0');plane.setAttribute('rotation','0 0 0');
+  target.appendChild(plane);sceneEl.append(assets,camera,target);container.appendChild(sceneEl);scene=sceneEl;
+  target.addEventListener('targetFound',()=>{say('Fotografia reconhecida! A animação está acompanhando a imagem.');const v=$('magicVideo');v.play().catch(()=>say('Imagem reconhecida. Toque em ATIVAR SOM para iniciar o vídeo.'))});
+  target.addEventListener('targetLost',()=>say('Fotografia fora de visão. Aponte a câmera novamente para continuar.'));
+  await waitForScene(sceneEl);
+  $('preview').classList.add('active');say('Câmera iniciada! Aponte para a fotografia cadastrada.');
+  const v=$('magicVideo');v.play().catch(()=>{});
+ }catch(err){say('Não foi possível iniciar: '+(err.message||err));$('preview').classList.remove('active');if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene=null}}
+ finally{btn.disabled=false;btn.textContent='TENTAR NOVAMENTE'}
+});
+$('sound').addEventListener('click',()=>{const v=$('magicVideo');if(!v)return;muted=!muted;v.muted=muted;if(!muted)v.play().catch(()=>{});$('sound').textContent=muted?'ATIVAR SOM':'SOM ATIVADO'});
+$('stop').addEventListener('click',()=>{if(scene){try{scene.systems['mindar-image-system'].stop()}catch{}scene.remove();scene=null}$('preview').classList.remove('active');say('Câmera encerrada. Você pode selecionar outros arquivos e testar novamente.');$('start').textContent='PREPARAR REALIDADE AUMENTADA';if(mindUrl)URL.revokeObjectURL(mindUrl);if(videoUrl)URL.revokeObjectURL(videoUrl);mindUrl=null;videoUrl=null});
+</script>
+</body></html>
