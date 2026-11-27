@@ -60,7 +60,7 @@ $('start').addEventListener('click',async()=>{
   const planeW=1,planeH=1/ratio;
   const container=$('arContainer');container.innerHTML='';
   const sceneEl=document.createElement('a-scene');
-  sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 10; warmupTolerance: 5; missTolerance: 30');
+  sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 30');
   sceneEl.setAttribute('embedded','');sceneEl.setAttribute('color-space','sRGB');
   sceneEl.setAttribute('renderer','alpha: true; colorManagement: true; physicallyCorrectLights: true');
   sceneEl.setAttribute('vr-mode-ui','enabled: false');sceneEl.setAttribute('device-orientation-permission-ui','enabled: false');
@@ -68,22 +68,7 @@ $('start').addEventListener('click',async()=>{
   const assets=document.createElement('a-assets');
   const vid=document.createElement('video');vid.id='magicVideo';vid.src=videoUrl;vid.setAttribute('loop','');vid.setAttribute('muted','');vid.setAttribute('playsinline','');vid.setAttribute('webkit-playsinline','');vid.preload='auto';vid.crossOrigin='anonymous';assets.appendChild(vid);
   const camera=document.createElement('a-camera');camera.setAttribute('position','0 0 0');camera.setAttribute('look-controls','enabled: false');
-  const target=document.createElement('a-entity');target.setAttribute('mindar-image-target','targetIndex: 0');
-  // MindAR chama updateWorldMatrix no elemento A-Frame (não no componente).
-  // Segura a última pose por 500 ms para evitar ocultação por perdas de um ou poucos frames.
-  target.addEventListener('componentinitialized',event=>{
-   if(event.detail&&event.detail.name==='mindar-image-target'&&!target.__magicStable){
-    const originalUpdate=target.updateWorldMatrix.bind(target);
-    let lastValidAt=0;
-    target.updateWorldMatrix=(worldMatrix)=>{
-     if(worldMatrix!==null){lastValidAt=performance.now();originalUpdate(worldMatrix);return}
-     if(performance.now()-lastValidAt<500)return;
-     originalUpdate(null);
-    };
-    target.__magicStable=true;
-   }
-  });
-  const plane=document.createElement('a-video');plane.setAttribute('src','#magicVideo');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0');plane.setAttribute('rotation','0 0 0');
+  const target=document.createElement('a-entity');target.setAttribute('mindar-image-target','targetIndex: 0'  const plane=document.createElement('a-video');plane.setAttribute('src','#magicVideo');plane.setAttribute('width',String(planeW));plane.setAttribute('height',String(planeH));plane.setAttribute('position','0 0 0');plane.setAttribute('rotation','0 0 0');
   target.appendChild(plane);sceneEl.append(assets,camera,target);container.appendChild(sceneEl);scene=sceneEl;
   target.addEventListener('targetFound',()=>{say('Fotografia reconhecida! A animação está acompanhando a imagem.');const v=$('magicVideo');v.play().catch(()=>say('Imagem reconhecida. Toque em ATIVAR SOM para iniciar o vídeo.'))});
   target.addEventListener('targetLost',()=>say('Fotografia fora de visão. Aponte a câmera novamente para continuar.'));
