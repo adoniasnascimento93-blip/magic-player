@@ -60,7 +60,7 @@ $('start').addEventListener('click',async()=>{
   const planeW=1,planeH=1/ratio;
   const container=$('arContainer');container.innerHTML='';
   const sceneEl=document.createElement('a-scene');
-  sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0005; filterBeta: 1000; warmupTolerance: 8; missTolerance: 8');
+  sceneEl.setAttribute('mindar-image','imageTargetSrc: '+mindUrl+'; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 10; warmupTolerance: 8; missTolerance: 8');
   sceneEl.setAttribute('embedded','');sceneEl.setAttribute('color-space','sRGB');
   sceneEl.setAttribute('renderer','alpha: true; colorManagement: true; physicallyCorrectLights: true');
   sceneEl.setAttribute('vr-mode-ui','enabled: false');sceneEl.setAttribute('device-orientation-permission-ui','enabled: false');
