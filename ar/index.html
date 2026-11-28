@@ -64,7 +64,12 @@ $('start').addEventListener('click',async()=>{
    if(!prepared.ok)throw new Error('O arquivo de reconhecimento preparado não foi encontrado. Abra o painel e prepare novamente.');
    const encoded=(await prepared.text()).trim();
    const binary=atob(encoded);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-   buffer=bytes.buffer;progress(96,'Reconhecimento carregado!');
+   if(mindFile.endsWith('.mind.gz.b64')){
+    if(!('DecompressionStream' in window))throw new Error('Seu navegador não oferece suporte para abrir o reconhecimento comprimido. Atualize o Chrome.');
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    buffer=await new Response(stream).arrayBuffer();
+   }else{buffer=bytes.buffer;}
+   progress(96,'Reconhecimento carregado!');
   }else{
    const compiler=new window.MINDAR.IMAGE.Compiler();
    await compiler.compileImageTargets(images,p=>progress(27+p*0.68,'Preparando reconhecimento…'));
