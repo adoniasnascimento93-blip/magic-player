@@ -9,14 +9,14 @@
 <style>
 :root{color-scheme:dark;--bg:#090d18;--panel:#141b2b;--line:#2b3852;--muted:#a8b5cc;--violet:#8b5cf6;--cyan:#22d3ee}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20274a 0,#090d18 58%);font:15px system-ui,sans-serif;color:#f7f8ff;min-height:100vh}
-header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:21px;font-weight:900;letter-spacing:1.5px}.brand span{color:var(--cyan)}
+header{padding:20px 5%;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:11px;font-size:21px;font-weight:900;letter-spacing:1.5px}.brand img{width:46px;height:46px;object-fit:contain;display:block}.brand span{color:var(--cyan)}
 main{max-width:900px;margin:28px auto;padding:0 15px}.panel{background:#141b2bf2;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 18px 60px #0004}
 h1{font-size:clamp(25px,5vw,36px);margin:0 0 8px}h2{font-size:19px;margin:0 0 15px}p,.muted{color:var(--muted);line-height:1.5}.field{margin:13px 0}.field label{display:block;font-weight:700;margin-bottom:7px}.field input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c1322;color:#fff;font:inherit}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.btn,button{border:0;border-radius:11px;padding:12px 17px;background:linear-gradient(110deg,var(--violet),#526df5);color:white;font-weight:800;cursor:pointer;font-size:14px}.secondary{background:#26334c;border:1px solid #40516f}.danger{background:#7f1d1d}.btn:disabled,button:disabled{opacity:.5;cursor:wait}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.status{padding:12px 14px;border:1px dashed #52627f;border-radius:11px;color:#d3def2;margin-top:14px;white-space:pre-wrap}.hidden{display:none!important}html.has-saved-token #access{display:none!important}.item{display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff18}.item:last-child{border:0}.thumb{width:74px;height:64px;object-fit:cover;border-radius:9px;background:#0b1020}.iteminfo{min-width:0;flex:1}.iteminfo strong{display:block;overflow-wrap:anywhere}.iteminfo small{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:4px}.tag{font-size:11px;border:1px solid #52627f;border-radius:30px;padding:4px 8px;color:#cbd5e1}.hint{font-size:12px;color:#9eacc4}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 @media(max-width:620px){.grid{grid-template-columns:1fr}.panel{padding:17px}.item{align-items:flex-start}.thumb{width:58px;height:58px}}
 </style>
 </head>
 <body>
-<header><div class="brand">MAGIC<span> PHOTO AR</span></div><span class="tag">PAINEL ADMINISTRATIVO</span></header>
+<header><div class="brand"><img src="https://github.com/adoniasnascimento93-blip/magic-player/releases/download/logosublimart/2.png" alt="Logo"><div>MAGIC<span> PHOTO AR</span></div></div><span class="tag">PAINEL ADMINISTRATIVO</span></header>
 <main>
 <section class="panel" id="access">
 <h1>Gerenciar fotografias</h1>
