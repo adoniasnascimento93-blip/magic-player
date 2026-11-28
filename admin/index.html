@@ -91,9 +91,15 @@ $('prepare').onclick=async()=>{
   await compiler.compileImageTargets(images,p=>{$('formStatus').textContent='Preparando reconhecimento: '+Math.round(p)+'%';});
   const buffer=await compiler.exportData(),bytes=new Uint8Array(buffer);let binary='';
   for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
-  const encoded=btoa(binary);
-  if(encoded.length>850000)throw new Error('O arquivo preparado ficou grande demais para o armazenamento simples do GitHub ('+Math.round(encoded.length/1024)+' KB). Nenhuma alteração foi publicada. Podemos otimizar o armazenamento numa próxima etapa.');
-  const filename='targets-'+crypto.randomUUID()+'.mind.b64';
+  const rawBlob=new Blob([bytes]);
+  if(!('CompressionStream' in window))throw new Error('Este navegador não oferece compressão GZIP. Use uma versão atual do Chrome ou Edge.');
+  const compressedStream=rawBlob.stream().pipeThrough(new CompressionStream('gzip'));
+  const compressedBuffer=await new Response(compressedStream).arrayBuffer();
+  const compressedBytes=new Uint8Array(compressedBuffer);let compressedBinary='';
+  for(let i=0;i<compressedBytes.length;i+=0x8000)compressedBinary+=String.fromCharCode(...compressedBytes.subarray(i,Math.min(i+0x8000,compressedBytes.length)));
+  const encoded=btoa(compressedBinary);
+  if(encoded.length>900000)throw new Error('Mesmo comprimido, o arquivo ficou grande demais para o GitHub ('+Math.round(encoded.length/1024)+' KB). Nenhuma alteração foi publicada.');
+  const filename='targets-'+crypto.randomUUID()+'.mind.gz.b64';
   $('formStatus').textContent='Enviando reconhecimento preparado ao GitHub…';
   await api('/repos/'+OWNER+'/'+REPO+'/contents/ar/'+filename,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Preparar reconhecimento MAGIC PHOTO AR',content:encode64(encoded),branch:BRANCH})});
   const previous=mindFile;mindFile=filename;
