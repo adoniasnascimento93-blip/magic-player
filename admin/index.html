@@ -86,6 +86,7 @@ $('prepare').onclick=async()=>{
  }catch(e){$('formStatus').textContent='Não foi possível preparar: '+e.message}
  finally{b.disabled=false;$('save').disabled=false}
 };
-\n$('cancel').onclick=resetForm;$('reload').onclick=async()=>{const b=$('reload');b.disabled=true;try{await load()}catch(e){alert('Erro ao atualizar: '+e.message)}finally{b.disabled=false}};
+
+$('cancel').onclick=resetForm;$('reload').onclick=async()=>{const b=$('reload');b.disabled=true;try{await load()}catch(e){alert('Erro ao atualizar: '+e.message)}finally{b.disabled=false}};
 </script>
 </body></html>
