@@ -58,11 +58,27 @@ async function persist(){const body=JSON.stringify({version:1,mindFile:mindFile|
 $('save').onclick=async()=>{const name=$('name').value.trim(),photoUrl=$('photoUrl').value.trim(),videoUrl=$('videoUrl').value.trim(),id=$('editId').value;if(!name||!photoUrl||!videoUrl){$('formStatus').textContent='Preencha o nome e os dois links.';return}try{new URL(photoUrl);new URL(videoUrl)}catch{$('formStatus').textContent='Confira os links: eles precisam ser URLs válidas.';return}const old=records.slice(),oldMind=mindFile;mindFile='';if(id){records=records.map(r=>r.id===id?{...r,name,photoUrl,videoUrl,updatedAt:new Date().toISOString()}:r)}else{records.push({id:crypto.randomUUID(),name,photoUrl,videoUrl,createdAt:new Date().toISOString()})}$('save').disabled=true;$('formStatus').textContent='Salvando no GitHub…';try{await persist();render();resetForm();$('formStatus').textContent='Cadastro salvo com sucesso no GitHub!'}catch(e){records=old;mindFile=oldMind;$('formStatus').textContent='Falha ao salvar: '+e.message+'\nOs dados não foram publicados.'}finally{$('save').disabled=false}};
 async function deleteRecord(id){const r=records.find(x=>x.id===id);if(!r||!confirm('Excluir o cadastro “'+r.name+'”?'))return;const old=records.slice(),oldMind=mindFile;mindFile='';records=records.filter(x=>x.id!==id);try{await persist();render();if($('editId').value===id)resetForm()}catch(e){records=old;mindFile=oldMind;render();alert('Não foi possível excluir: '+e.message)}}
 
+async function ensureCompiler(){
+ if(window.MINDAR?.IMAGE?.Compiler)return;
+ $('formStatus').textContent='Carregando ferramenta de reconhecimento…';
+ const urls=[
+  'https://unpkg.com/mind-ar@1.2.5/dist/mindar-image.prod.js',
+  'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js'
+ ];
+ for(const src of urls){
+  await new Promise(resolve=>{
+   const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=resolve;
+   document.head.appendChild(script);
+  });
+  if(window.MINDAR?.IMAGE?.Compiler)return;
+ }
+ throw new Error('A biblioteca MindAR não foi carregada pelos servidores disponíveis. Verifique a conexão e tente novamente.');
+}
 $('prepare').onclick=async()=>{
  const b=$('prepare');if(!records.length){$('formStatus').textContent='Cadastre ao menos uma fotografia antes de preparar.';return}
- if(!window.MINDAR?.IMAGE?.Compiler){$('formStatus').textContent='A ferramenta de reconhecimento não carregou. Atualize o painel.';return}
  b.disabled=true;$('save').disabled=true;
  try{
+  await ensureCompiler();
   $('formStatus').textContent='Carregando '+records.length+' fotografia(s)…';
   const images=[];
   for(let i=0;i<records.length;i++){
