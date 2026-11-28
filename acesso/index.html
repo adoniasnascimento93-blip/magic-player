@@ -111,7 +111,6 @@ function closeExperience(){
  experience.classList.remove('open');
  experience.setAttribute('aria-hidden','true');
  experienceFrame.src='about:blank';
- if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
  document.body.style.overflow='';
 }
 document.querySelectorAll('[data-ar-launch]').forEach(link=>link.addEventListener('click',async event=>{
@@ -119,8 +118,6 @@ document.querySelectorAll('[data-ar-launch]').forEach(link=>link.addEventListene
  experience.classList.add('open');
  experience.setAttribute('aria-hidden','false');
  document.body.style.overflow='hidden';
- const request=document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen;
- if(request){try{await request.call(document.documentElement)}catch(e){}}
  experienceFrame.src='https://magic.runs-at.dev/ar/?iniciar=1';
 }));
 document.getElementById('closeExperience').addEventListener('click',closeExperience);
