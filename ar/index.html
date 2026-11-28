@@ -12,7 +12,11 @@
 #arContainer canvas{background:transparent!important}
 #loading{position:fixed;z-index:5;left:50%;bottom:max(28px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(310px,calc(100vw - 48px));padding:13px 16px 12px;border:1px solid #ffffff20;border-radius:15px;background:#101522d9;backdrop-filter:blur(14px);box-shadow:0 8px 35px #0008;transition:opacity .35s,transform .35s}
 #loading.done{opacity:0;pointer-events:none;transform:translate(-50%,12px)}
-.loadtop{display:none}#message{display:none}
+/* Mantém somente a barra visual: oculta mensagens técnicas das bibliotecas AR/A-Frame. */
+.loadtop,#message,#percent{display:none!important}
+.mindar-ui-overlay,.mindar-ui-loading,.mindar-ui-scanning,.mindar-ui-error,
+.a-loader,.a-loader-title,.a-enter-vr,.a-orientation-modal{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+#arContainer .mindar-ui-overlay,#arContainer .mindar-ui-loading,#arContainer .mindar-ui-scanning,#arContainer .mindar-ui-error{display:none!important}
 #percent{font-variant-numeric:tabular-nums;color:#9eeeff;font-weight:800}
 .track{height:4px;border-radius:99px;background:#ffffff20;overflow:hidden}
 #fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#8b5cf6,#22d3ee);transition:width .18s ease}
